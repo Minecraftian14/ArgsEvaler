@@ -14,7 +14,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'in.mcxiv:ArgsEvaler:0.1'
+    implementation 'in.mcxiv:ArgsEvaler:1.o'
 }
 ```
 
