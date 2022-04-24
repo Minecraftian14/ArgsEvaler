@@ -5,8 +5,13 @@ Parse the arguments received in an application to a Map object.
 #### importing in your project
 
 ```groovy
+repositories {
+    // .. other repositories
+    maven { url 'https://jitpack.io/#in.mcxiv' }
+}
+
 dependencies {
-    implementation 'in.mcxiv.MCXIVUtilities:args:5dc74447ff:args'
+    implementation 'in.mcxiv:ArgsEvaler:0.1'
 }
 ```
 
