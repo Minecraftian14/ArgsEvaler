@@ -3,7 +3,7 @@
 [![](https://jitpack.io/v/Minecraftian14/ArgsEvaler.svg)](https://jitpack.io/#in.mcxiv/ArgsEvaler)
 [![](https://img.shields.io/discord/872811194170347520?color=%237289da&logoColor=%23424549)](https://discord.gg/Ar6Zuj2m82)
 
-Parse the arguments received in an application to a Map object.
+Evaluate the arguments received in an application to a Map object.
 
 #### importing in your project
 
@@ -18,10 +18,10 @@ dependencies {
 }
 ```
 
-### Creating a parser
+### Creating an evaluator
 
 ```groovy
-ArgsEvaler parser = new ArgsEvaler.ArgsEvalerBuilder()
+ArgsEvaler evaluator = new ArgsEvaler.ArgsEvalerBuilder()
         .build();
 ```
 
@@ -41,7 +41,7 @@ Input arguments: `! World Hello`
 Referencing: `{a="!", b="World", c="Hello"}`
 
 ```groovy
-ArgsEvaler parser = new ArgsEvaler.ArgsEvalerBuilder()
+ArgsEvaler evaluator = new ArgsEvaler.ArgsEvalerBuilder()
         .addIndexed("name_a")
         .addIndexed("name_b")
         .addIndexed("name_c")
@@ -50,7 +50,7 @@ ArgsEvaler parser = new ArgsEvaler.ArgsEvalerBuilder()
 
 ### Adding Named Arguments
 
-To parse arguments which are equated with an `=` character and may occur in any order, use the named arguments.
+To evaluate arguments which are equated with an `=` character and may occur in any order, use the named arguments.
 
 If the names are defined as "a", "b" and "c":
 <br>
@@ -59,7 +59,7 @@ Input arguments: `c=! a=World b=Hello`
 Referencing: `{a="World", b="Hello", c="!"}`
 
 ```groovy
-ArgsEvaler parser = new ArgsEvaler.ArgsEvalerBuilder()
+ArgsEvaler evaluator = new ArgsEvaler.ArgsEvalerBuilder()
         .addNamed("name_a")
         .addNamed("name_b")
         .addNamed("name_b")
@@ -68,8 +68,8 @@ ArgsEvaler parser = new ArgsEvaler.ArgsEvalerBuilder()
 
 ### Adding Tagged Arguments
 
-To parse arguments which are followed by a tag/word before them we use tagged arguments. Note, the tag can be placed
-anywhere, and will parse the word right after it, so these arguments can also occur in any order.
+To evaluate arguments which are followed by a tag/word before them we use tagged arguments. Note, the tag can be placed
+anywhere, and will evaluate the word right after it, so these arguments can also occur in any order.
 
 If the tags are defined as "-a", "-b" and "--cat":
 <br>
@@ -78,7 +78,7 @@ Input arguments: `-b Hello -a World --cat !`
 Referencing: `{-a="World", -b="Hello", --cat="!"}`
 
 ```groovy
-ArgsEvaler parser = new ArgsEvaler.ArgsEvalerBuilder()
+ArgsEvaler evaluator = new ArgsEvaler.ArgsEvalerBuilder()
         .addTagged("tag_a")
         .addTagged("tag_b")
         .addTagged("tag_b")
@@ -97,7 +97,7 @@ Input arguments: `Hello java world, args`
 Referencing: `{java="java", args="args", other args}`
 
 ```groovy
-ArgsEvaler parser = new ArgsEvaler.ArgsEvalerBuilder()
+ArgsEvaler evaluator = new ArgsEvaler.ArgsEvalerBuilder()
         .addWord("word_a")
         .addWord("word_b")
         .build();
@@ -105,10 +105,10 @@ ArgsEvaler parser = new ArgsEvaler.ArgsEvalerBuilder()
 
 ### Adding Chained Arguments
 
-When we have to parse a specific order or certain words occurring in an args array, we can proceed to use chain
+When we have to evaluate a specific order or certain words occurring in an args array, we can proceed to use chain
 arguments. These may occur anywhere in the args array, but all words must occur one after another.
 
-Note, by default expression and chained arguments are parsed first, but if the order is changed, other parsers may
+Note, by default expression and chained arguments are evaluated first, but if the order is changed, other evaluators may
 extract words occurring inside the chains, and thus cause an unexpected behaviour.
 
 If a chain is defined as "the_chain" = "This", "is", "a", "chain":
@@ -118,18 +118,18 @@ Input arguments: `This is a book This is a chain`
 Referencing: `{the_chain={"This", "is", "a", "chain", other args}`
 
 ```groovy
-ArgsEvaler parser = new ArgsEvaler.ArgsEvalerBuilder()
+ArgsEvaler evaluator = new ArgsEvaler.ArgsEvalerBuilder()
         .addChain("name_of_chain", "chain_element_1", "chain_element_2", ...)
         .build();
 ```
 
 ### Adding Expression Arguments
 
-Much similar to chains, expressions takes the complexity a step further. While chain is limited to just parsing a
+Much similar to chains, expressions takes the complexity a step further. While chain is limited to just evaluating a
 specific occurrence of words, expression can take help of regex patterns or string predicates to determine a suitable
 word. Similar to chains, these may occur anywhere in the args array.
 
-Currently, one can provide the following data for parsing:
+Currently, one can provide the following data for evaluating:
 
 * a String - to match the exact word
 * a Class - to let Object Resolvers do their duty.
@@ -148,14 +148,14 @@ Input arguments: `word 19 fg12h`
 Referencing: `{an_expr={"word", 19, "fg12h"}`
 
 ```groovy
-ArgsEvaler parser = new ArgsEvaler.ArgsEvalerBuilder()
+ArgsEvaler evaluator = new ArgsEvaler.ArgsEvalerBuilder()
         .addExpression("expression_name", object_1, object_2, ...)
         .build();
 ```
 
 ```groovy
-// For example, consider this parser:
-ArgsEvaler parser = new ArgsEvaler.ArgsEvalerBuilder()
+// For example, consider this evaluator:
+ArgsEvaler evaluator = new ArgsEvaler.ArgsEvalerBuilder()
         .addExpression("another expression", "kub", File.class, predicate(s -> s.length() % 2 == 0), resolve(s -> s.length() % 2 == 1, String::length), pattern("<!(\\d{10})>", long.class))
         .build();
 
@@ -168,7 +168,7 @@ ArgsEvaler parser = new ArgsEvaler.ArgsEvalerBuilder()
     pattern("<!(\\d{10})>", long.class)
 }
 
-// Therefore the args it must parse should start with the word 'kub'
+// Therefore the args it must evaluate should start with the word 'kub'
 
 // Next up it can have a string, which will be resolved into a File object.
 
@@ -179,27 +179,27 @@ ArgsEvaler parser = new ArgsEvaler.ArgsEvalerBuilder()
 // resolve helper method, which states that the incoming string must be of 
 // an odd length and should store it's length as the value.
 
-// And finally, the parser ends with a StringPatternResolver placed using
+// And finally, the evaluator ends with a StringPatternResolver placed using
 // the static pattern helper method. The upcoming string should be a 10 digit 
 // number placed in between <! and >. And that number is concerted to a long 
 // to be stored.
 
 // For example
-ResultMap map = parser.parse(new String[]{
+ResultMap map = evaluator.evaluate(new String[]{
         "kub", "some_dir/some.file", "evenLength", "oddLength", "<!2345678901>"
 });
 ```
 
-### Parsing Variadic Arguments
+### Evaluating Variadic Arguments
 
 One may require an array of indefinite length at the end of arguments.
 
-To parse the remaining arguments at the end of the args array, enable this property in ArgsEvalerBuilder.
+To evaluate the remaining arguments at the end of the args array, enable this property in ArgsEvalerBuilder.
 
 These may exist only at the end of the array.
 
 ```groovy
-ArgsEvaler parser = new ArgsEvaler.ArgsEvalerBuilder()
+ArgsEvaler evaluator = new ArgsEvaler.ArgsEvalerBuilder()
         .setRequireAllIndexedArgsToBeFulfilled(true)
         .build();
 ```
@@ -207,7 +207,7 @@ ArgsEvaler parser = new ArgsEvaler.ArgsEvalerBuilder()
 ### Other flags of ArgsEvalerBuilder
 
 * `.setRequireAllIndexedArgsToBeFulfilled(#boolean)`
-    * Make the parse require all indexed arguments be fulfilled.
+    * Make the evaluator require all indexed arguments be fulfilled.
 * `.setHasVariadicEnding(#boolean)`
     * Enable/Disable Variadic Arguments.
 * `.setMixingEachTypeIsAllowed(#boolean)`
@@ -217,7 +217,7 @@ ArgsEvaler parser = new ArgsEvaler.ArgsEvalerBuilder()
 
 ### Redefining Evaluation order
 
-One can make the parser evaluate the different kinds of arguments in a specific order, or simply ignore a few specific
+One can make the evaluator evaluate the different kinds of arguments in a specific order, or simply ignore a few specific
 types. Note that one must not set mixing allowed when creating a new order {`setMixingEachTypeIsAllowed(true)`}.
 
 Indexed and Variadic arguments always lie at the end of evaluation order, so the only configurable types are Named,
@@ -226,22 +226,22 @@ Expression, Tagged and Chain.
 The default order of execution is Expression>Chain>Tagged>Named>Indexed>?Variadic.
 
 ```groovy
-ArgsEvaler parser = new ArgsEvaler.ArgsEvalerBuilder()
+ArgsEvaler evaluator = new ArgsEvaler.ArgsEvalerBuilder()
         .setEvaluationOrder(evaluationOrder1, evaluationOrder2, ...)
         .build();
 ```
 
 ```groovy
-ArgsEvaler parser = new ArgsEvaler.ArgsEvalerBuilder()
+ArgsEvaler evaluator = new ArgsEvaler.ArgsEvalerBuilder()
         .setEvaluationOrder(EvaluationOrder.NAMED, EvaluationOrder.TAGGED)
         .build();
 ```
 
-### Parsing Arguments and Retrieving Values
+### Evaluating Arguments and Retrieving Values
 
 [//]: # (@formatter:off)
 ```groovy
-var map = parser.parse(args);
+var map = evaluator.evaluate(args);
 Object object = map.get("name_a");
 String string = (String) map.get("name_a");
 int num_a = map.getT("some_int_a");
@@ -256,10 +256,10 @@ Optional<Object> opt_c = map.getOpt("some_int_c", 1114)
 
 ### Specifying Data Types
 
-To parse stuff directly to primitive types like `int`, we can specify it's class type.
+To evaluate stuff directly to primitive types like `int`, we can specify it's class type.
 
 ```groovy
-ArgsEvaler parser = new ArgsEvaler.ArgsEvalerBuilder()
+ArgsEvaler evaluator = new ArgsEvaler.ArgsEvalerBuilder()
         .addIndexed("num_a", long.class)
         .build();
 ```
@@ -295,10 +295,10 @@ Pattern.class
 
 #### Adding custom types
 
-Use the add resolver to add parsers for custom types.
+Use the add resolver to add evaluators for custom types.
 
 ```groovy
-ArgsEvaler parser = new ArgsEvaler.ArgsEvalerBuilder()
+ArgsEvaler evaluator = new ArgsEvaler.ArgsEvalerBuilder()
         .addResolver(ByteBuffer.class, (c, s) -> ByteBuffer.wrap(s.getBytes()))
         .build();
 ```

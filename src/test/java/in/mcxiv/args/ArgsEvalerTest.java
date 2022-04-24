@@ -2,7 +2,6 @@ package in.mcxiv.args;
 
 import in.mcxiv.args.ArgsEvaler.EvaluationOrder;
 import in.mcxiv.args.ArgsEvaler.ResultMap;
-import in.mcxiv.args.ArgsEvaler.StringPredicate;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -18,13 +17,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class ArgsEvalerTest {
 
-    public static void main(String[] args) {
-        System.out.println(Arrays.toString(args));
-    }
-
     @Test
     void testArgsEvaler() {
-        ArgsEvaler parser = new ArgsEvaler.ArgsEvalerBuilder()
+        ArgsEvaler evaluator = new ArgsEvaler.ArgsEvalerBuilder()
                 .addIndexed("name_a")
                 .addIndexed("name_b")
                 .addIndexed("some_int_a", int.class)
@@ -41,7 +36,7 @@ class ArgsEvalerTest {
                 .addResolver(ByteBuffer.class, (c, s) -> ByteBuffer.wrap(s.getBytes()))
                 .build();
 
-        ResultMap map = parser.parse(new String[]{
+        ResultMap map = evaluator.evaluate(new String[]{
                 "path=this/lol",
                 "hello", "world",
                 "bytes=someBytes", "135",
@@ -78,7 +73,7 @@ class ArgsEvalerTest {
         // Just curious
         System.out.println(((File) map.get("path")).getAbsolutePath());
 
-        ResultMap resultMap = parser.parse(new String[]{"ooof", "ooof", "1114"});
+        ResultMap resultMap = evaluator.evaluate(new String[]{"ooof", "ooof", "1114"});
 
         int name = resultMap.getT("some_int_a");
         Assertions.assertEquals(1114, name);
@@ -102,38 +97,38 @@ class ArgsEvalerTest {
     void testConfigurableParameters() {
         ResultMap resultMap;
 
-        final ArgsEvaler parser1 = new ArgsEvaler.ArgsEvalerBuilder()
+        final ArgsEvaler evaluator1 = new ArgsEvaler.ArgsEvalerBuilder()
                 .addIndexed("A").addIndexed("B").addIndexed("C")
                 .setRequireAllIndexedArgsToBeFulfilled(true)
                 .build();
 
-        assertThrows(Throwable.class, () -> parser1.parse(args("a", "b")));
-        assertDoesNotThrow(() -> parser1.parse(args("a", "b", "c")));
-        assertDoesNotThrow(() -> parser1.parse(args("a", "b", "c", "d")));
+        assertThrows(Throwable.class, () -> evaluator1.evaluate(args("a", "b")));
+        assertDoesNotThrow(() -> evaluator1.evaluate(args("a", "b", "c")));
+        assertDoesNotThrow(() -> evaluator1.evaluate(args("a", "b", "c", "d")));
 
-        final ArgsEvaler parser2 = new ArgsEvaler.ArgsEvalerBuilder()
+        final ArgsEvaler evaluator2 = new ArgsEvaler.ArgsEvalerBuilder()
                 .addIndexed("A").addIndexed("B")
                 .setHasVariadicEnding(true)
                 .build();
 
-        assertArrayEquals(new String[]{"c", "d"}, parser2.parse(args("a", "b", "c", "d")).getVariadic());
+        assertArrayEquals(new String[]{"c", "d"}, evaluator2.evaluate(args("a", "b", "c", "d")).getVariadic());
 
-        final ArgsEvaler parser3 = new ArgsEvaler.ArgsEvalerBuilder()
+        final ArgsEvaler evaluator3 = new ArgsEvaler.ArgsEvalerBuilder()
                 .addNamed("X")
                 .addIndexed("A").addIndexed("B")
                 .setMixingEachTypeIsAllowed(false)
                 .build();
 
-        resultMap = parser3.parse(args("X=x", "a", "b"));
+        resultMap = evaluator3.evaluate(args("X=x", "a", "b"));
         assertEquals("x", resultMap.getT("X"));
         assertEquals("a", resultMap.getT("A"));
         assertEquals("b", resultMap.getT("B"));
-        resultMap = parser3.parse(args("a", "X=x", "b"));
+        resultMap = evaluator3.evaluate(args("a", "X=x", "b"));
         assertNull(resultMap.getT("X"));
         assertEquals("a", resultMap.getT("A"));
         assertEquals("X=x", resultMap.getT("B"));
 
-        final ArgsEvaler parser4 = new ArgsEvaler.ArgsEvalerBuilder()
+        final ArgsEvaler evaluator4 = new ArgsEvaler.ArgsEvalerBuilder()
                 .addTagged("-t")
                 .addNamed("X")
                 .addIndexed("A")
@@ -141,16 +136,16 @@ class ArgsEvalerTest {
                 .setMixingEachTypeIsAllowed(false)
                 .build();
 
-        resultMap = parser4.parse(args("-t", "T", "X-Hello-x", "a"));
+        resultMap = evaluator4.evaluate(args("-t", "T", "X-Hello-x", "a"));
         assertEquals("T", resultMap.getT("-t"));
         assertEquals("x", resultMap.getT("X"));
         assertEquals("a", resultMap.getT("A"));
-        resultMap = parser4.parse(args("-t", "T", "a", "X-Hello-x"));
+        resultMap = evaluator4.evaluate(args("-t", "T", "a", "X-Hello-x"));
         assertEquals("T", resultMap.getT("-t"));
         assertNull(resultMap.getT("X"));
         assertEquals("a", resultMap.getT("A"));
 
-        final ArgsEvaler parser5 = new ArgsEvaler.ArgsEvalerBuilder()
+        final ArgsEvaler evaluator5 = new ArgsEvaler.ArgsEvalerBuilder()
                 .addTagged("-t")
                 .addNamed("X")
                 .addNamed("Y")
@@ -158,7 +153,7 @@ class ArgsEvalerTest {
                 .setEvaluationOrder(EvaluationOrder.NAMED, EvaluationOrder.TAGGED, EvaluationOrder.NAMED)
                 .build();
 
-        resultMap = parser5.parse(args("X=x", "-t", "T", "Y=y", "a"));
+        resultMap = evaluator5.evaluate(args("X=x", "-t", "T", "Y=y", "a"));
         System.out.println(resultMap);
         assertEquals("T", resultMap.getT("-t"));
         assertEquals("x", resultMap.getT("X"));

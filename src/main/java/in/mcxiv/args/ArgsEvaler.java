@@ -10,7 +10,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * The main class which parses the arguments.
+ * The main class which evaluates the arguments.
  * <p>
  * Please see {@link ArgsEvalerBuilder} to create an instance.
  * Also take a note of {@link ArgumentTypes} to learn about the various types of arguments.
@@ -74,64 +74,64 @@ public class ArgsEvaler {
     }
 
     /**
-     * Parses the given array of arguments into a Map object.
+     * Evaluates the given array of arguments into a Map object.
      * The keys and value types are specified by the {@link ArgsEvalerBuilder} when
      * building an instance of {@link ArgsEvaler}.
      *
-     * @param args The arguments to be parsed.
+     * @param args The arguments to be evaluated.
      * @return The Map object mapping the argument names to their values.
      */
-    public ResultMap parse(String[] args) {
+    public ResultMap evaluate(String[] args) {
         LinkedList<String> list = new LinkedList<>();
         Collections.addAll(list, args);
-        return parse(list, new ResultMap());
+        return evaluate(list, new ResultMap());
     }
 
     /**
-     * Parses the given array of arguments into a Map object.
+     * Evaluates the given array of arguments into a Map object.
      * The keys and value types are specified by the {@link ArgsEvalerBuilder} when
      * building an instance of {@link ArgsEvaler}.
      *
-     * @param args The arguments to be parsed.
+     * @param args The arguments to be evaluated.
      * @param map  Provide an existing instance of ResultMap for reusing.
      * @return The Map object mapping the argument names to their values.
      */
-    public ResultMap parse(String[] args, ResultMap map) {
-        if (map == null) return parse(args);
+    public ResultMap evaluate(String[] args, ResultMap map) {
+        if (map == null) return evaluate(args);
         LinkedList<String> list = new LinkedList<>();
         Collections.addAll(list, args);
         map.clear();
-        return parse(list, map);
+        return evaluate(list, map);
     }
 
-    private ResultMap parse(List<String> args, ResultMap map) {
+    private ResultMap evaluate(List<String> args, ResultMap map) {
 
 
         for (EvaluationOrder order : evaluationOrder)
             switch (order) {
                 case EXPRESSION:
-                    parseExpressionArguments(args, map);
+                    evaluateExpressionArguments(args, map);
                     break;
                 case CHAINED:
-                    parseChainedArguments(args, map);
+                    evaluateChainedArguments(args, map);
                     break;
                 case TAGGED:
-                    parseTaggedArguments(args, map);
+                    evaluateTaggedArguments(args, map);
                     break;
                 case NAMED:
-                    parseNamedArguments(args, map);
+                    evaluateNamedArguments(args, map);
                     break;
             }
 
-        parseIndexedArguments(args, map);
+        evaluateIndexedArguments(args, map);
 
         if (hasVariadicEnding && args.size() > 0)
-            parseVariadicArguments(args, map);
+            evaluateVariadicArguments(args, map);
 
         return map;
     }
 
-    private void parseExpressionArguments(List<String> args, ResultMap map) {
+    private void evaluateExpressionArguments(List<String> args, ResultMap map) {
 
         for (int argsIdx = 0, argsS = args.size(); argsIdx < argsS; argsIdx++) {
 
@@ -220,7 +220,7 @@ public class ArgsEvaler {
         }
     }
 
-    private void parseChainedArguments(List<String> args, ResultMap map) {
+    private void evaluateChainedArguments(List<String> args, ResultMap map) {
 
         for (int argsIdx = 0, argsS = args.size(); argsIdx < argsS; argsIdx++) {
 
@@ -258,7 +258,7 @@ public class ArgsEvaler {
         }
     }
 
-    private void parseTaggedArguments(List<String> args, ResultMap map) {
+    private void evaluateTaggedArguments(List<String> args, ResultMap map) {
 
         for (int argsIdx = 0, argsS = args.size(); argsIdx < argsS; argsIdx++) {
 
@@ -290,7 +290,7 @@ public class ArgsEvaler {
         }
     }
 
-    private void parseNamedArguments(List<String> args, ResultMap map) {
+    private void evaluateNamedArguments(List<String> args, ResultMap map) {
 
         for (int argsIdx = 0, argsS = args.size(); argsIdx < argsS; argsIdx++) {
 
@@ -327,7 +327,7 @@ public class ArgsEvaler {
         }
     }
 
-    private void parseIndexedArguments(List<String> args, ResultMap map) {
+    private void evaluateIndexedArguments(List<String> args, ResultMap map) {
         if (requireAllIndexedArgsToBeFulfilled && indexed.length > args.size())
             throw new IllegalArgumentException("Too few indexed arguments.");
 
@@ -338,12 +338,12 @@ public class ArgsEvaler {
             args.remove(0);
     }
 
-    private void parseVariadicArguments(List<String> args, ResultMap map) {
+    private void evaluateVariadicArguments(List<String> args, ResultMap map) {
         map.put(VARIADIC_KEY, args.toArray(new String[0]));
     }
 
     /**
-     * A list of all the various types of arguments which {@link ArgsEvaler} can parse.
+     * A list of all the various types of arguments which {@link ArgsEvaler} can evaluate.
      * Note that this list does not contain Indexed Arguments and Variadic Arguments as
      * they can only exist at the end of the execution order.
      */
@@ -410,7 +410,7 @@ public class ArgsEvaler {
          */
         EXPRESSION,
         /**
-         * In the context of {@link ArgsEvaler} these are just the remaining unparsed arguments
+         * In the context of {@link ArgsEvaler} these are just the remaining unevaluated arguments
          * left at the end of the args array.
          * <p>
          * If the args must contain an array of indefinite size, they are called Variadic Arguments.
@@ -532,7 +532,7 @@ public class ArgsEvaler {
 
     /**
      * ResultMap is a utility class which casts the values to required return type as required.
-     * It represents a collection of the parsed arguments, a mapping from their name to their value.
+     * It represents a collection of the evaluated arguments, a mapping from their name to their value.
      */
     public static class ResultMap extends AbstractMap<String, Object> {
 
@@ -786,10 +786,10 @@ public class ArgsEvaler {
         private final HashMap<Class<?>, ObjectResolver> objectResolvers = new HashMap<>();
 
         /**
-         * Define a new execution order of parsing of the various types of arguments.
+         * Define a new execution order of evaluating of the various types of arguments.
          * Note, that Indexed and Variadic always lie at the end.
          * <p>
-         * Use this function to reorder or remove unneeded components of the parser.
+         * Use this function to reorder or remove unneeded components of the evaluator.
          * <p>
          * The default execution order is:
          * <ul>
@@ -811,11 +811,11 @@ public class ArgsEvaler {
         }
 
         /**
-         * Sets the parser to allow parsing less values than provided for Indexed arguments.
+         * Sets the evaluator to allow evaluating less values than provided for Indexed arguments.
          * <p>
          * By default, it's set to false.
          *
-         * @param requireAllIndexedArgsToBeFulfilled should the parser parse all indexed arguments?
+         * @param requireAllIndexedArgsToBeFulfilled should the evaluator evaluate all indexed arguments?
          * @return this, for Fluent API
          */
         public ArgsEvalerBuilder setRequireAllIndexedArgsToBeFulfilled(boolean requireAllIndexedArgsToBeFulfilled) {
@@ -824,12 +824,12 @@ public class ArgsEvaler {
         }
 
         /**
-         * Sets the parser to also parse Variadic Arguments.
+         * Sets the evaluator to also evaluate Variadic Arguments.
          * <p>
-         * Variadic Arguments are basically the remaining arguments which were left unaffected by the parser.
-         * By default, it is disabled. Enable it to parse indefinite lengths of possible arguments.
+         * Variadic Arguments are basically the remaining arguments which were left unaffected by the evaluator.
+         * By default, it is disabled. Enable it to evaluate indefinite lengths of possible arguments.
          *
-         * @param hasVariadicEnding Should the parser parse variadic arguments.
+         * @param hasVariadicEnding Should the evaluator evaluate variadic arguments.
          * @return this, for Fluent API
          */
         public ArgsEvalerBuilder setHasVariadicEnding(boolean hasVariadicEnding) {
@@ -838,15 +838,15 @@ public class ArgsEvaler {
         }
 
         /**
-         * Sets the parser to allow mixing the different types of arguments.
+         * Sets the evaluator to allow mixing the different types of arguments.
          * <p>
-         * When it's allowed, {@code "name=value", "-tag", "tagged_value"} will be parsed into one tagged value
+         * When it's allowed, {@code "name=value", "-tag", "tagged_value"} will be evaluated into one tagged value
          * and one named value. But if it's not allowed, it will not see any tagged values after named values.
-         * So it will only parse one named value (and 2 variadic values if enabled).
+         * So it will only evaluate one named value (and 2 variadic values if enabled).
          *
          * <b>Dont use it along with a custom execution order.</b>
          *
-         * @param mixingEachTypeIsAllowed Should the parser allow mixing of the types?
+         * @param mixingEachTypeIsAllowed Should the evaluator allow mixing of the types?
          * @return this, for Fluent API
          */
         public ArgsEvalerBuilder setMixingEachTypeIsAllowed(boolean mixingEachTypeIsAllowed) {

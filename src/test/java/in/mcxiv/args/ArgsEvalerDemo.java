@@ -9,7 +9,7 @@ import static in.mcxiv.args.ArgsEvaler.predicate;
 
 public class ArgsEvalerDemo {
 
-    private static final ArgsEvaler parser = new ArgsEvaler.ArgsEvalerBuilder()
+    private static final ArgsEvaler evaluator = new ArgsEvaler.ArgsEvalerBuilder()
             .addExpression("command sequence",
                     predicate("create delete edit"::contains),
                     pattern("<!(\\d{10})>", long.class),
@@ -27,7 +27,7 @@ public class ArgsEvalerDemo {
     }
 
     public static void main2(String[] args) throws InterruptedException {
-        ResultMap result = parser.parse(args);
+        ResultMap result = evaluator.evaluate(args);
 
         result.ifPresent("help", o -> printHelpMessage());
 
