@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
+import static in.mcxiv.args.ArgsEvaler.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ArgsEvalerTest {
@@ -36,7 +37,7 @@ class ArgsEvalerTest {
                 .addTagged("-t")
                 .addChain("a chain", "this", "is", "interesting")
                 .addExpression("an expression", "kub", "timeout", Pattern.compile("<!\\d{10}.*>"), Pattern.compile("<!(\\d{10}).*>"), int.class)
-                .addExpression("another expression", "kub", "profile", ((StringPredicate) s -> s.length() % 2 == 0), ArgsEvaler.resolve(s -> s.length() % 2 == 1, s -> s.substring(s.length() / 2)))
+                .addExpression("another expression", "kub", File.class, predicate(s -> s.length() % 2 == 0), resolve(s -> s.length() % 2 == 1, String::length), pattern("<!(\\d{10})>", long.class))
                 .addResolver(ByteBuffer.class, (c, s) -> ByteBuffer.wrap(s.getBytes()))
                 .build();
 
@@ -50,7 +51,7 @@ class ArgsEvalerTest {
                 "this", "is", "interesting",
                 "-t", "another tagged value",
                 "kub", "timeout", "<!2345678901>", "<!2345678901>", "14",
-                "kub", "profile", "evenLength", "oddLength",
+                "kub", "some_dir/some.file", "evenLength", "oddLength", "<!2345678901>",
                 "value=something"});
 
         Assertions.assertEquals("hello", map.get("name_a"));
@@ -70,7 +71,7 @@ class ArgsEvalerTest {
         Assertions.assertArrayEquals(new Object[]{"this", "is", "interesting"}, (Object[]) map.get("a chain"));
 
         Assertions.assertArrayEquals(new Object[]{"kub", "timeout", "<!2345678901>", "2345678901", 14}, (Object[]) map.get("an expression"));
-        Assertions.assertArrayEquals(new Object[]{"kub", "profile", "evenLength", "ength"}, (Object[]) map.get("another expression"));
+        Assertions.assertArrayEquals(new Object[]{"kub", new File("some_dir/some.file"), "evenLength", 9, 2345678901L}, (Object[]) map.get("another expression"));
 
         map.forEach((s, o) -> System.out.printf("%-20s\t%s%n", s, Arrays.deepToString(new Object[]{o})));
 

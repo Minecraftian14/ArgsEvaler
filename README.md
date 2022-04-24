@@ -134,7 +134,9 @@ Currently, one can provide the following data for parsing:
 * a Pattern with at least one capturing group - to check if the value must match this pattern and store the value as the
   group 1 match.
 * a StringPredicate - to implement custom logic analyzing a string, to keep or not.
-* a StringPredResolver - to implement custom logic analyzing a string, and keep it's transformed value if it's valid.
+* a StringPredicateResolver - to implement custom logic analyzing a string, and keep it's transformed value if it's
+  valid.
+* a StringPatternResolver - to specify a pattern the string must satisfy, and keep it's transformed value if it's valid.
 
 If an expression is defined as "an_expr" = "word", int.class, Pattern.compile("^\\w{5}$"):
 <br>
@@ -146,6 +148,43 @@ Referencing: `{an_expr={"word", 19, "fg12h"}`
 ArgsEvaler parser = new ArgsEvaler.ArgsEvalerBuilder()
         .addExpression("expression_name", object_1, object_2, ...)
         .build();
+```
+
+```groovy
+// For example, consider this parser:
+ArgsEvaler parser = new ArgsEvaler.ArgsEvalerBuilder()
+        .addExpression("another expression", "kub", File.class, predicate(s -> s.length() % 2 == 0), resolve(s -> s.length() % 2 == 1, String::length), pattern("<!(\\d{10})>", long.class))
+        .build();
+
+// The expression array goes like
+{
+    "kub" ,
+    File.class ,
+    predicate(s -> s.length() % 2 == 0) ,
+    resolve(s -> s.length() % 2 == 1, String::length) ,
+    pattern("<!(\\d{10})>", long.class)
+}
+
+// Therefore the args it must parse should start with the word 'kub'
+
+// Next up it can have a string, which will be resolved into a File object.
+
+// Then there's a StringPredicate created using the static predicate helper
+// method, which states that the incoming string should of of an even length.
+
+// Further ahead, we placed a StringPredicateResolver using the static 
+// resolve helper method, which states that the incoming string must be of 
+// an odd length and should store it's length as the value.
+
+// And finally, the parser ends with a StringPatternResolver placed using
+// the static pattern helper method. The upcoming string should be a 10 digit 
+// number placed in between <! and >. And that number is concerted to a long 
+// to be stored.
+
+// For example
+ResultMap map = parser.parse(new String[]{
+        "kub", "some_dir/some.file", "evenLength", "oddLength", "<!2345678901>"
+});
 ```
 
 ### Parsing Variadic Arguments

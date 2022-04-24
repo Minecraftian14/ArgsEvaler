@@ -1,6 +1,7 @@
 package in.mcxiv.args;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -505,6 +506,17 @@ public class ArgsEvaler {
         }
     }
 
+    /**
+     * A utility method to neatly create instances of {@link StringPatternResolver} when using Expression Arguments.
+     *
+     * @param pattern The pattern an argument must satisfy before becoming a part of Expression Argument.
+     * @param clazz   The class type which the argument should be resolved into.
+     * @return An instance of {@link StringPatternResolver}.
+     * @see StringPatternResolver
+     */
+    public static StringPatternResolver pattern(String pattern, Class<?> clazz) {
+        return new StringPatternResolver(Pattern.compile(pattern), clazz);
+    }
 
     /**
      * A utility method to neatly create instances of {@link StringPatternResolver} when using Expression Arguments.
@@ -696,6 +708,15 @@ public class ArgsEvaler {
         }
 
         /**
+         * To get an optional of the array of strings which represent the Variadic Arguments if enabled.
+         *
+         * @see ResultMap#getVariadic()
+         */
+        public Optional<String[]> getVariadicOpt() {
+            return getOptT(VARIADIC_KEY);
+        }
+
+        /**
          * Runs the provided call back in case the value represented by the given key
          * exists (is non-null).
          *
@@ -705,6 +726,10 @@ public class ArgsEvaler {
         public void ifPresent(String name, Consumer<Object> thenRunThis) {
             if (map.containsKey(name))
                 thenRunThis.accept(get(name));
+        }
+
+        public CompletableFuture<Void> ifPresentRunAsync(String name, Consumer<Object> thenRunThis) {
+            return CompletableFuture.runAsync(() -> ifPresent(name, thenRunThis));
         }
 
         /**
